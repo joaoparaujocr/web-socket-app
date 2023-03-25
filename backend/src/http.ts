@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -13,7 +14,7 @@ mongoose.connect("mongodb://localhost/websocket");
 const optionsCors:
   | cors.CorsOptions
   | cors.CorsOptionsDelegate<cors.CorsRequest> = {
-  origin: ["http://localhost:5173"],
+  origin: ["http://localhost:4173", "http://localhost:5173"],
 };
 
 const io = new Server(server, {
