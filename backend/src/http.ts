@@ -6,7 +6,6 @@ import cors from "cors";
 import mongoose from "mongoose";
 
 const app = express();
-
 const server = createServer(app);
 
 mongoose.connect("mongodb://localhost/websocket");
@@ -24,7 +23,7 @@ const io = new Server(server, {
 app.use(cors(optionsCors));
 
 io.on("connection", (socker) => {
-  console.log(socker.id);
+  socker.id;
 });
 
 app.get("/", (req, res) => {

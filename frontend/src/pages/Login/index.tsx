@@ -2,6 +2,10 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import InputForm from "../../components/InputForm";
 import Form from "./styles";
 import { socket } from "../../socket";
+import { UserContext } from "../../context/userContext";
+import { useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import User from "../../interfaces/User";
 
 interface InputNames {
   name: string;
@@ -10,14 +14,16 @@ interface InputNames {
 }
 
 const Login = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<InputNames>();
+  const navigate = useNavigate();
+  const { register, handleSubmit } = useForm<InputNames>();
+  const { setInfoUSer } = useContext(UserContext);
 
-  const onSubmitHandle: SubmitHandler<InputNames> = (data) => {
-    socket.emit("user_login", data);
+  const onSubmitHandle: SubmitHandler<InputNames> = (dataSubmit) => {
+    socket.emit("user_login", dataSubmit, (data: User) => {
+      localStorage.setItem("@userWebSocket", JSON.stringify(data));
+      setInfoUSer(data);
+    });
+    navigate("/chat");
   };
 
   return (
