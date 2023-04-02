@@ -4,7 +4,6 @@ const MainContainer = styled.main`
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  max-width: 1200px;
   width: 100%;
   height: 100vh;
   margin: 0 auto;
@@ -41,7 +40,7 @@ const MainContainer = styled.main`
     }
   }
 
-   > div {
+  > div {
     background-color: #a3a3a3;
     display: flex;
     flex-direction: column;
@@ -49,6 +48,7 @@ const MainContainer = styled.main`
     width: 100%;
 
     ul {
+      overflow-y: scroll;
       padding: 0 6px;
       list-style-type: none;
 

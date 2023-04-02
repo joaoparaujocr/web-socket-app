@@ -11,7 +11,7 @@ const ChatRoomSchema = new Schema({
   idUsers: [
     {
       type: Schema.Types.ObjectId,
-      ref: "Users",
+      ref: "User",
     },
   ],
   idChatRoom: {

@@ -5,28 +5,39 @@ import { socket } from "../../socket";
 import MainContainer from "./styles";
 import UserDefault from "../../assets/user-default.jpg";
 import UserInterface from "../../interfaces/User";
-import MessageData from "../../interfaces/Message";
+import MessageData, { Message } from "../../interfaces/Message";
+import Room from "../../interfaces/Room";
+import React from "react";
+import NotificationMsg from "../../interfaces/Notification";
 
-interface StartChatData {}
+interface StartChatData {
+  messages: Message[];
+  room: Room;
+}
 
 const Chat = () => {
   const { infoUser } = useContext(UserContext);
   const [idChatRoom, setIdChatRoom] = useState<string>();
   const inputRef = useRef<HTMLInputElement>({} as HTMLInputElement);
   const [users, setUsers] = useState<UserInterface[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [userSelected, setUserSelected] = useState<UserInterface>(
     {} as UserInterface
   );
-  const [allMessages, setAllMessages] = useState<MessageData[]>([]);
-  const [messagesToRoom, setMessagesToRoom] = useState<MessageData[]>([]);
 
   const selectUser = (user: UserInterface) => {
     const idUser = user._id;
-    socket.emit("start_chat", { idUser }, (data: any) => {
-      console.log(data);
-      setIdChatRoom(data.idChatRoom);
-      setUserSelected(user);
-    });
+    const filterUser = users.filter((userObj) => userObj._id !== user._id);
+    setUsers([...filterUser, { ...user, newMessage: false }]);
+    socket.emit(
+      "start_chat",
+      { idUser },
+      ({ messages, room }: StartChatData) => {
+        setIdChatRoom(room.idChatRoom);
+        setMessages(messages);
+        setUserSelected(user);
+      }
+    );
   };
 
   const submitMenssage = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -59,33 +70,51 @@ const Chat = () => {
       socket.emit("get_all_user", getAllUsers);
 
       socket.on("new_users", newUsers);
-
-      socket.on("message", (data) => {
-        setAllMessages((prev) => [...prev, data]);
-      });
     }
 
     return () => {
       socket.off("new_users", newUsers);
       socket.off("get_all_user", getAllUsers);
-      socket.off("message");
     };
   }, [infoUser]);
+
+  useEffect(() => {
+    socket.on("message", ({ message }: MessageData) => {
+      if (message.roomId === idChatRoom) {
+        setMessages((prev) => [...prev, message]);
+      }
+    });
+
+    socket.on("notification", (data: NotificationMsg) => {
+      if (data.from._id !== infoUser._id && data.roomId !== idChatRoom)
+        setUsers((prev) => [
+          ...prev.filter((user) => user._id !== data.from._id),
+          { ...data.from, newMessage: data.newMessage },
+        ]);
+    });
+
+    return () => {
+      socket.off("message");
+      socket.off("notification");
+    };
+  }, [userSelected]);
 
   return (
     <MainContainer>
       <aside>
-        <input type="text" placeholder="Digite seu email" />
         <ul>
-          {users.map((userItems) => (
-            <UserItem
-              isSelected={userItems._id === userSelected._id}
-              key={userItems._id}
-              name={userItems.name}
-              imgUrl={userItems.avatar || UserDefault}
-              onClickEvent={() => selectUser(userItems)}
-            />
-          ))}
+          {users.map((userItems) => {
+            return (
+              <UserItem
+                newMessage={userItems.newMessage}
+                isSelected={userItems._id === userSelected._id}
+                key={userItems._id}
+                name={userItems.name}
+                imgUrl={userItems.avatar || UserDefault}
+                onClickEvent={() => selectUser(userItems)}
+              />
+            );
+          })}
         </ul>
 
         <div>
@@ -95,18 +124,20 @@ const Chat = () => {
       </aside>
       <div>
         <ul>
-          {allMessages
-            .filter((message) => message.message.roomId === idChatRoom)
-            .map((message) => (
-              <li
-                key={message.message._id}
-                className={`${
-                  message.user._id === infoUser._id ? "me" : "user"
-                }`}
-              >
-                <p>{message.message.text}</p>
-              </li>
-            ))}
+          {messages.length > 0 && (
+            <React.Fragment>
+              {messages?.map((message) => (
+                <li
+                  key={message._id}
+                  className={`${
+                    message.to._id === infoUser._id ? "me" : "user"
+                  }`}
+                >
+                  <p>{message.text}</p>
+                </li>
+              ))}
+            </React.Fragment>
+          )}
         </ul>
         <input
           ref={inputRef}

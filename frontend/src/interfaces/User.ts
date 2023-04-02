@@ -4,4 +4,5 @@ export default interface User {
   avatar: string;
   _id: string;
   socketId: string;
+  newMessage?: boolean;
 }

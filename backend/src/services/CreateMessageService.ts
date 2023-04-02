@@ -16,7 +16,7 @@ class CreateMessageService {
       roomId,
     });
 
-    return message;
+    return message.populate("to");
   }
 }
 

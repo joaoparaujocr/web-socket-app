@@ -1,11 +1,11 @@
 import { string } from "yup";
 import User from "./User";
 
-interface Message {
+export interface Message {
   created_at: string;
   roomId: string;
   text: string;
-  to: string;
+  to: User;
   _id: string;
 }
 
